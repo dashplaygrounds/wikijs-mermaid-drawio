@@ -1,0 +1,60 @@
+services:
+  db:
+    container_name: db
+    image: postgres:11
+    networks:
+      - wikinet
+    environment:
+      - POSTGRES_DB=wiki
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
+    volumes:
+      - /etc/wiki/.db-secret:/etc/wiki/.db-secret:ro
+      - pgdata:/var/lib/postgresql/data
+
+  wiki:
+    container_name: wiki
+    image: ghcr.io/requarks/wiki:2
+    networks:
+      - wikinet
+    environment:
+      - DB_TYPE=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_PASS=postgres
+      - DB_USER=postgres
+      - DB_NAME=wiki
+      - WIKI_HOST=http://localhost
+    ports:
+      - 9092:3000
+    restart: always
+
+  mermaid:
+    container_name: mermaid
+    image: ghcr.io/mermaid-js/mermaid-live-editor
+    networks:
+      - wikinet
+    ports:
+      - 9091:8080
+    restart: always
+
+  drawio:
+    container_name: drawio
+    image: jgraph/drawio
+    networks:
+      - wikinet
+    ports:
+      - 9090:8080
+    restart: always
+
+networks:
+  wikinet:
+    external: true
+volumes:
+  pgdata:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /opt/postgres
